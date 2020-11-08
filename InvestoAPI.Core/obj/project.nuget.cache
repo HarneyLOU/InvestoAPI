@@ -1,0 +1,12 @@
+{
+  "version": 2,
+  "dgSpecHash": "2iJ+1Swi53bz0MXzU6HemcHEV68+5139rIkkgqhOtUOMIs+jzraS1JX5pSJ4yLoyYwu22uDvKzkZmnEBniArGw==",
+  "success": true,
+  "projectFilePath": "C:\\Thesis\\InvestoAPI\\InvestoAPI.Core\\InvestoAPI.Core.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\Indeep\\.nuget\\packages\\microsoft.extensions.configuration.abstractions\\3.1.9\\microsoft.extensions.configuration.abstractions.3.1.9.nupkg.sha512",
+    "C:\\Users\\Indeep\\.nuget\\packages\\microsoft.extensions.dependencyinjection.abstractions\\3.1.9\\microsoft.extensions.dependencyinjection.abstractions.3.1.9.nupkg.sha512",
+    "C:\\Users\\Indeep\\.nuget\\packages\\microsoft.extensions.primitives\\3.1.9\\microsoft.extensions.primitives.3.1.9.nupkg.sha512"
+  ],
+  "logs": []
+}

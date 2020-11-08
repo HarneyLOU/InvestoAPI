@@ -1,0 +1,15 @@
+C:\Thesis\InvestoAPI\InvestoAPI.Infrastructure\bin\Debug\netcoreapp3.1\InvestoAPI.Infrastructure.deps.json
+C:\Thesis\InvestoAPI\InvestoAPI.Infrastructure\bin\Debug\netcoreapp3.1\InvestoAPI.Infrastructure.dll
+C:\Thesis\InvestoAPI\InvestoAPI.Infrastructure\obj\Debug\netcoreapp3.1\InvestoAPI.Infrastructure.csprojAssemblyReference.cache
+C:\Thesis\InvestoAPI\InvestoAPI.Infrastructure\obj\Debug\netcoreapp3.1\InvestoAPI.Infrastructure.AssemblyInfoInputs.cache
+C:\Thesis\InvestoAPI\InvestoAPI.Infrastructure\obj\Debug\netcoreapp3.1\InvestoAPI.Infrastructure.AssemblyInfo.cs
+C:\Thesis\InvestoAPI\InvestoAPI.Infrastructure\bin\Debug\netcoreapp3.1\InvestoAPI.Infrastructure.runtimeconfig.json
+C:\Thesis\InvestoAPI\InvestoAPI.Infrastructure\bin\Debug\netcoreapp3.1\InvestoAPI.Infrastructure.runtimeconfig.dev.json
+C:\Thesis\InvestoAPI\InvestoAPI.Infrastructure\bin\Debug\netcoreapp3.1\InvestoAPI.Infrastructure.pdb
+C:\Thesis\InvestoAPI\InvestoAPI.Infrastructure\obj\Debug\netcoreapp3.1\InvestoAPI.Infrastructure.dll
+C:\Thesis\InvestoAPI\InvestoAPI.Infrastructure\obj\Debug\netcoreapp3.1\InvestoAPI.Infrastructure.pdb
+C:\Thesis\InvestoAPI\InvestoAPI.Infrastructure\obj\Debug\netcoreapp3.1\InvestoAPI.Infrastructure.genruntimeconfig.cache
+C:\Thesis\InvestoAPI\InvestoAPI.Infrastructure\bin\Debug\netcoreapp3.1\InvestoAPI.Core.dll
+C:\Thesis\InvestoAPI\InvestoAPI.Infrastructure\bin\Debug\netcoreapp3.1\InvestoAPI.Core.pdb
+C:\Thesis\InvestoAPI\InvestoAPI.Infrastructure\obj\Debug\netcoreapp3.1\InvestoAPI.Infrastructure.csproj.CopyComplete
+C:\Thesis\InvestoAPI\InvestoAPI.Infrastructure\obj\Debug\netcoreapp3.1\InvestoAPI.Infrastructure.csproj.CoreCompileInputs.cache

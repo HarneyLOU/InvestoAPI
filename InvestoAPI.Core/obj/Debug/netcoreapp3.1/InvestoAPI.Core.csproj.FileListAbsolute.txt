@@ -1,0 +1,9 @@
+C:\Thesis\InvestoAPI\InvestoAPI.Core\bin\Debug\netcoreapp3.1\InvestoAPI.Core.deps.json
+C:\Thesis\InvestoAPI\InvestoAPI.Core\bin\Debug\netcoreapp3.1\InvestoAPI.Core.dll
+C:\Thesis\InvestoAPI\InvestoAPI.Core\bin\Debug\netcoreapp3.1\InvestoAPI.Core.pdb
+C:\Thesis\InvestoAPI\InvestoAPI.Core\obj\Debug\netcoreapp3.1\InvestoAPI.Core.csprojAssemblyReference.cache
+C:\Thesis\InvestoAPI\InvestoAPI.Core\obj\Debug\netcoreapp3.1\InvestoAPI.Core.AssemblyInfoInputs.cache
+C:\Thesis\InvestoAPI\InvestoAPI.Core\obj\Debug\netcoreapp3.1\InvestoAPI.Core.AssemblyInfo.cs
+C:\Thesis\InvestoAPI\InvestoAPI.Core\obj\Debug\netcoreapp3.1\InvestoAPI.Core.dll
+C:\Thesis\InvestoAPI\InvestoAPI.Core\obj\Debug\netcoreapp3.1\InvestoAPI.Core.pdb
+C:\Thesis\InvestoAPI\InvestoAPI.Core\obj\Debug\netcoreapp3.1\InvestoAPI.Core.csproj.CoreCompileInputs.cache
