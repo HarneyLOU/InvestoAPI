@@ -10,13 +10,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\HistoricDataImporter\HistoricDataImporter.csproj" />
     <ProjectReference Include="..\InvestoAPI.Core\InvestoAPI.Core.csproj" />
     <ProjectReference Include="..\InvestoAPI.Infrastructure\InvestoAPI.Infrastructure.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="ViewModels\" />
+    <ProjectReference Include="..\InvestoAPI.Shared\InvestoAPI.Shared.csproj" />
   </ItemGroup>
 
 

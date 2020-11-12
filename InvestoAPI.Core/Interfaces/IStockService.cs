@@ -8,7 +8,9 @@ namespace InvestoAPI.Core.Interfaces
 {
     public interface IStockService
     {
-        Stock GetStockCurrent(string symbol);
+        DateTime GetMaxDate(string symbol);
+        Stock GetStock(string symbol, DateTime? date);
+        IEnumerable<StockDaily> GetStockDailyCurrentAll();
         IEnumerable<Stock> GetStockHistory(string symbol, string from, string to, string interval = "d");
     }
 }

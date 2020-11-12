@@ -1,15 +1,12 @@
-using AutoMapper;
-using HistoricDataImporter;
 using InvestoAPI.Core;
-using InvestoAPI.HubConfig;
+using InvestoAPI.Core.Entities;
 using InvestoAPI.Infrastructure;
-using InvestoAPI.Infrastructure.HostedServices;
+using InvestoAPI.Shared;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using System;
 
 namespace InvestoAPI
 {
@@ -35,15 +32,13 @@ namespace InvestoAPI
             });
 
             services.AddCore(Configuration);
+            services.AddShared(Configuration);
             services.AddInfrastructure(Configuration);
 
             services.AddControllers().AddJsonOptions(options =>
             {
                 options.JsonSerializerOptions.WriteIndented = true;
             });
-
-            StockDataImporter test = new StockDataImporter(new System.Net.Http.HttpClient());
-            test.UpdateDailyStocks();
 
         }
 
@@ -66,7 +61,7 @@ namespace InvestoAPI
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
-                endpoints.MapHub<ChartHub>("/chart");
+                endpoints.MapHub<StockHub>("/realtimetrades");
             });
         }
     }

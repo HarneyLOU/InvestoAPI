@@ -23,7 +23,12 @@ namespace InvestoAPI.Infrastructure.Services
 
         public IEnumerable<Company> GetAll()
         {
-            return _context.Companies;
+            return _context.Companies.Distinct(); ;
+        }
+
+        public string GetImage(string symbol)
+        {
+            return _context.Companies.Where(c => c.Symbol == symbol).Select(c => c.Image).FirstOrDefault();
         }
 
         public IEnumerable<Company> GetDowJones()

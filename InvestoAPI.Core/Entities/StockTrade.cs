@@ -10,8 +10,6 @@ namespace InvestoAPI.Core.Entities
 
         public decimal Price { get; set; }
 
-        public long Time { get; set; }
-
-        public decimal Volume { get; set; }
+        public DateTime Date { get; set; }
     }
 }

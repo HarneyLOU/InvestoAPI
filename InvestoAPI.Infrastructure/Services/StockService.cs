@@ -33,9 +33,21 @@ namespace InvestoAPI.Infrastructure.Services
             _context = context;
         }
 
-        public Stock GetStockCurrent(string symbol)
+        public DateTime GetMaxDate(string symbol)
         {
-            throw new NotImplementedException();
+            return _context.Stocks.Max(s => s.Date);
+        }
+
+        public Stock GetStock(string symbol, DateTime? date = null)
+        {
+            int companyId = _context.Companies.Where(s => s.Symbol == symbol).Select(x => x.CompanyId).FirstOrDefault();
+            return _context.Stocks.Where(s => s.Date == date && s.CompanyId == companyId).FirstOrDefault();
+        }
+
+        public IEnumerable<StockDaily> GetStockDailyCurrentAll()
+        {
+            DateTime lastDate = _context.StocksDaily.Max(s => s.Date);
+            return _context.StocksDaily.Where(s => s.Date == lastDate).Distinct();
         }
 
         public IEnumerable<Stock> GetStockHistory(string symbol, string from, string to, string interval = "d")
@@ -47,10 +59,9 @@ namespace InvestoAPI.Infrastructure.Services
 
             int companyId = _context.Companies.Where(s => s.Symbol == symbol).Select(x => x.CompanyId).FirstOrDefault();
             return _context.Stocks.Where(
-            s => s.CompanyId == companyId &&
-            s.Date >= fromDate &&
-            s.Date <= toDate);
-
+                s => s.CompanyId == companyId &&
+                s.Date >= fromDate &&
+                s.Date <= toDate);
         }
     }
 }

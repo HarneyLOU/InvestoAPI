@@ -8,6 +8,7 @@ namespace InvestoAPI.Core.Interfaces
     public interface ICompanyService
     {
         IEnumerable<Company> GetAll();
+        string GetImage(string symbol);
         IEnumerable<Company> GetDowJones();
     }
 }

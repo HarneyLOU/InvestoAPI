@@ -23,7 +23,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\HistoricDataImporter\HistoricDataImporter.csproj" />
     <ProjectReference Include="..\InvestoAPI.Core\InvestoAPI.Core.csproj" />
+    <ProjectReference Include="..\InvestoAPI.Shared\InvestoAPI.Shared.csproj" />
   </ItemGroup>
 
 </Project>

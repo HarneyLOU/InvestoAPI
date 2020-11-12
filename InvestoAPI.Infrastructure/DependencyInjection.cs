@@ -14,7 +14,6 @@ namespace InvestoAPI.Infrastructure
     {
         public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration config)
         {
-            services.AddSignalR();
             services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
             services.AddDbContext<ApplicationContext>(opts =>
                 opts.UseSqlServer(config.GetConnectionString("sqlConnection")));
@@ -24,9 +23,9 @@ namespace InvestoAPI.Infrastructure
             //});
             services.AddScoped<IStockService, StockService>();
             services.AddScoped<ICompanyService, CompanyService>();
-            services.AddSingleton<IWebsocketStocksService, WebsocketStocksService>();
-            services.AddHostedService<RealTimeStockHostedService>();
-            services.AddHostedService<WebsocketHostedService>();
+            services.AddSingleton<RealTimeStockService>();
+            services.AddSingleton<WebsocketService>();
+            services.AddHostedService<StockHostedService>();
             return services;
         }
     }
