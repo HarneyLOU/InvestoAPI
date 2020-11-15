@@ -23,14 +23,25 @@ namespace InvestoAPI.Infrastructure.Services
         public WebsocketService(ILogger<WebsocketService> logger)
         {
             _logger = logger;
-            WebSocket = GetClient();
             autoConnect = true;
         }
 
         public bool IsOpen()
         {
-            if (WebSocket.State == WebSocketState.Open) return true;
-            else return false;
+            if(WebSocket != null)
+            {
+                if (WebSocket.State == WebSocketState.Open) return true;
+            }
+            return false;
+        }
+
+        public bool IsConnecting()
+        {
+            if (WebSocket != null)
+            {
+                if (WebSocket.State == WebSocketState.Connecting) return true;
+            }
+            return false;
         }
 
         async public Task Connect(CancellationToken stoppingToken)
@@ -41,9 +52,9 @@ namespace InvestoAPI.Infrastructure.Services
 
         async public Task Reconnect(CancellationToken stoppingToken)
         {
-            WebSocket = GetClient();
-            await WebSocket.ConnectAsync(new Uri(url), stoppingToken);
-            await WebSocket.SendAsync(Encoding.UTF8.GetBytes(lastData), WebSocketMessageType.Text, true, stoppingToken);
+            //WebSocket = GetClient();
+            //await WebSocket.ConnectAsync(new Uri(url), stoppingToken);
+            //await WebSocket.SendAsync(Encoding.UTF8.GetBytes(lastData), WebSocketMessageType.Text, true, stoppingToken);
         }
 
         private ClientWebSocket GetClient()
@@ -54,8 +65,7 @@ namespace InvestoAPI.Infrastructure.Services
 
         async public Task Send(string data, CancellationToken stoppingToken)
         {
-            lastData = data;
-            if (IsOpen()) await WebSocket.SendAsync(Encoding.UTF8.GetBytes(data), WebSocketMessageType.Text, true, stoppingToken);
+            await WebSocket.SendAsync(Encoding.UTF8.GetBytes(data), WebSocketMessageType.Text, true, stoppingToken);
         }
 
         async public Task Disconnect(string description, CancellationToken stoppingToken)

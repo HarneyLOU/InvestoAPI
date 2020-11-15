@@ -32,8 +32,8 @@ namespace InvestoAPI.Controllers
         {
             var companies = _companyService.GetAll().ToList();
             var stocksShort = _stockService.GetStockDailyCurrentAll().Join(companies,
-                stock => stock.CompanyId,
-                company => company.CompanyId,
+                stock => stock.StockId,
+                company => company.StockId,
                 (stock, company) =>
                     new StockShortViewModel()
                     {
@@ -46,7 +46,7 @@ namespace InvestoAPI.Controllers
                         Low = stock.Low,
                         High = stock.High,
                         Change = decimal.Round(((stock.Price - stock.Close) / stock.Close), 4, MidpointRounding.AwayFromZero),
-                        Date = stock.Date
+                        Date = DateTime.SpecifyKind(stock.Date, DateTimeKind.Utc)
                     }
                 );
             return Ok(stocksShort);

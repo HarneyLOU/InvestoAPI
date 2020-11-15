@@ -6,7 +6,7 @@ namespace InvestoAPI.Core.Entities
 {
     public class StockDaily
     {
-        public int CompanyId { get; set; }
+        public int StockId { get; set; }
 
         public string Symbol { get; set; }
 

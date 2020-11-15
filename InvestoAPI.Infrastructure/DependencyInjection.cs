@@ -23,6 +23,7 @@ namespace InvestoAPI.Infrastructure
             //});
             services.AddScoped<IStockService, StockService>();
             services.AddScoped<ICompanyService, CompanyService>();
+            services.AddScoped<IUserService, UserService>();
             services.AddSingleton<RealTimeStockService>();
             services.AddSingleton<WebsocketService>();
             services.AddHostedService<StockHostedService>();

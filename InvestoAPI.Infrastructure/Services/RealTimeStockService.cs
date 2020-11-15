@@ -36,16 +36,22 @@ namespace InvestoAPI.Infrastructure.Services
             _hub.Clients.All.SendAsync("stockupdate", currentStockPrices);
         }
 
+        public DateTime LastUpdate()
+        {
+            return currentStockPrices.Max(c => c.Date);
+        }
+
         public void Update(StockTrade stock)
         {
             var toUpdate = currentStockPrices.FirstOrDefault(s => s.Symbol == stock.Symbol);
             if (toUpdate == null) currentStockPrices.Add(stock);
             else
             {
-                if(toUpdate.Date < stock.Date)
+                var stockDate = stock.Date;
+                if(toUpdate.Date < stockDate)
                 {
                     toUpdate.Price = stock.Price;
-                    toUpdate.Date = stock.Date;
+                    toUpdate.Date = stockDate;
                 }
             }
         }

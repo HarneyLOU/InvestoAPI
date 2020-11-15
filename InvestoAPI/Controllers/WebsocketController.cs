@@ -32,7 +32,7 @@ namespace InvestoAPI.Web.Controllers
         [HttpGet("status")]
         public ActionResult Status()
         {
-            return Ok(_websocketService.WebSocket.State.ToString());
+            return Ok(_websocketService.IsOpen());
         }
 
         [HttpGet("connect")]

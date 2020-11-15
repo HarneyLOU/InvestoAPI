@@ -40,8 +40,8 @@ namespace InvestoAPI.Infrastructure.Services
 
         public Stock GetStock(string symbol, DateTime? date = null)
         {
-            int companyId = _context.Companies.Where(s => s.Symbol == symbol).Select(x => x.CompanyId).FirstOrDefault();
-            return _context.Stocks.Where(s => s.Date == date && s.CompanyId == companyId).FirstOrDefault();
+            int companyId = _context.Companies.Where(s => s.Symbol == symbol).Select(x => x.StockId).FirstOrDefault();
+            return _context.Stocks.Where(s => s.Date == date && s.StockId == companyId).FirstOrDefault();
         }
 
         public IEnumerable<StockDaily> GetStockDailyCurrentAll()
@@ -53,15 +53,24 @@ namespace InvestoAPI.Infrastructure.Services
         public IEnumerable<Stock> GetStockHistory(string symbol, string from, string to, string interval = "d")
         {
             DateTime fromDate;
-            if (!DateTime.TryParse(from, out fromDate)) fromDate = DateTime.Now.AddYears(-100);
+            if (!DateTime.TryParse(from, out fromDate)) fromDate = DateTime.Parse("2010-01-01");
             DateTime toDate;
             if (!DateTime.TryParse(to, out toDate)) toDate = DateTime.Now;
 
-            int companyId = _context.Companies.Where(s => s.Symbol == symbol).Select(x => x.CompanyId).FirstOrDefault();
-            return _context.Stocks.Where(
-                s => s.CompanyId == companyId &&
-                s.Date >= fromDate &&
-                s.Date <= toDate);
+            int companyId = _context.Companies.Where(s => s.Symbol == symbol).Select(x => x.StockId).FirstOrDefault();
+            try
+            {
+                return _context.Stocks.Where(
+                    s => s.StockId == companyId &&
+                    s.Date >= fromDate &&
+                    s.Date <= toDate).Take(1000); ;
+            }
+            catch(Exception ex)
+            {
+                _logger.LogError($"ERROR - {ex.Message}");
+                return null;
+            }
+
         }
     }
 }

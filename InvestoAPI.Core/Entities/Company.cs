@@ -7,7 +7,7 @@ namespace InvestoAPI.Core.Entities
     public class Company
     {
         [Key]
-        public int CompanyId { get; set; }
+        public int StockId { get; set; }
 
         public string Name { get; set; }
 

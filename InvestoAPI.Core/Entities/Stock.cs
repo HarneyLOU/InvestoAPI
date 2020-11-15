@@ -6,7 +6,7 @@ namespace InvestoAPI.Core.Entities
     public class Stock
     {
 
-        public int CompanyId { get; set; }
+        public int StockId { get; set; }
 
         public DateTime Date { get; set; }
 
