@@ -1,14 +1,12 @@
-﻿using Microsoft.EntityFrameworkCore.Query.Internal;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Net.WebSockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace InvestoAPI.Infrastructure.Services
+namespace InvestoAPI.Core.Services
 {
     public class WebsocketService
     {
@@ -18,7 +16,8 @@ namespace InvestoAPI.Infrastructure.Services
         private readonly ILogger<WebsocketService> _logger;
 
         private string lastData = "";
-        private string url = "wss://ws.finnhub.io?token=bpv6tnnrh5rabkt31r10";
+        //private string url = "wss://ws.finnhub.io?token=bpv6tnnrh5rabkt31r10";
+        private string url = "wss://api.tiingo.com/iex";
 
         public WebsocketService(ILogger<WebsocketService> logger)
         {
@@ -73,7 +72,6 @@ namespace InvestoAPI.Infrastructure.Services
             if (WebSocket != null)
             {
                 await WebSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, description, stoppingToken);
-                WebSocket.Dispose();
             }
         }
 

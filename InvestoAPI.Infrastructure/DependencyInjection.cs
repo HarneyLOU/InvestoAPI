@@ -1,6 +1,5 @@
 ﻿using AutoMapper;
 using InvestoAPI.Core.Interfaces;
-using InvestoAPI.Infrastructure.HostedServices;
 using InvestoAPI.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -24,9 +23,7 @@ namespace InvestoAPI.Infrastructure
             services.AddScoped<IStockService, StockService>();
             services.AddScoped<ICompanyService, CompanyService>();
             services.AddScoped<IUserService, UserService>();
-            services.AddSingleton<RealTimeStockService>();
-            services.AddSingleton<WebsocketService>();
-            services.AddHostedService<StockHostedService>();
+            services.AddScoped<IWalletService, WalletService>();
             return services;
         }
     }

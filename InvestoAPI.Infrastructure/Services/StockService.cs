@@ -63,7 +63,7 @@ namespace InvestoAPI.Infrastructure.Services
                 return _context.Stocks.Where(
                     s => s.StockId == companyId &&
                     s.Date >= fromDate &&
-                    s.Date <= toDate).Take(1000); ;
+                    s.Date <= toDate).Take(1000);
             }
             catch(Exception ex)
             {

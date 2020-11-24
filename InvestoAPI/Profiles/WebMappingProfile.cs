@@ -15,6 +15,7 @@ namespace InvestoAPI.Web.Profiles
             CreateMap<User, UserViewModel>();
             CreateMap<RegisterViewModel, User>();
             CreateMap<UpdateViewModel, User>();
+            CreateMap<WalletViewModel, Wallet>().ReverseMap();
         }
     }
 }

@@ -17,7 +17,6 @@
   <ItemGroup>
     <ProjectReference Include="..\InvestoAPI.Core\InvestoAPI.Core.csproj" />
     <ProjectReference Include="..\InvestoAPI.Infrastructure\InvestoAPI.Infrastructure.csproj" />
-    <ProjectReference Include="..\InvestoAPI.Shared\InvestoAPI.Shared.csproj" />
   </ItemGroup>
 
 

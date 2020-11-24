@@ -1,14 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-using System.Text;
+using System.Linq;
+using System.Threading.Tasks;
 
-namespace InvestoAPI.Core.Entities
+namespace InvestoAPI.Web.ViewModels
 {
-    public class Wallet
+    public class WalletViewModel
     {
-        [Key]
         public int WalletId { get; set; }
 
         public string Name { get; set; }
@@ -16,9 +14,7 @@ namespace InvestoAPI.Core.Entities
         public string Description { get; set; }
 
         public int OwnerId { get; set; }
-        public User Owner { get; set; }
 
-        [Column(TypeName = "decimal(18,4)")]
         public decimal InitMoney { get; set; }
 
         public DateTime Created { get; set; }

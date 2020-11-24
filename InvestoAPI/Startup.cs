@@ -1,8 +1,7 @@
 using InvestoAPI.Core;
-using InvestoAPI.Core.Entities;
+using InvestoAPI.Core.Hubs;
 using InvestoAPI.Core.Interfaces;
 using InvestoAPI.Infrastructure;
-using InvestoAPI.Shared;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -12,7 +11,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System;
-using System.Collections.Generic;
+using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -45,6 +44,7 @@ namespace InvestoAPI
                 x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
                 x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
             })
+        
             .AddJwtBearer(x =>
             {
                 x.Events = new JwtBearerEvents
@@ -53,10 +53,10 @@ namespace InvestoAPI
                     {
                         var userService = context.HttpContext.RequestServices.GetRequiredService<IUserService>();
                         var userId = int.Parse(context.Principal.Identity.Name);
+                        var userClaimedRole = context.Principal.FindFirst(c => c.Type == ClaimTypes.Role).Value;
                         var user = userService.GetById(userId);
-                        if (user == null)
+                        if (user == null && user.Role == userClaimedRole)
                         {
-                            // return unauthorized if user no longer exists
                             context.Fail("Unauthorized");
                         }
                         return Task.CompletedTask;
@@ -74,7 +74,6 @@ namespace InvestoAPI
             });
 
             services.AddCore(Configuration);
-            services.AddShared(Configuration);
             services.AddInfrastructure(Configuration);
 
 

@@ -4,8 +4,9 @@ using System.Text;
 
 namespace InvestoAPI.Core.Helpers
 {
-    public class AppSettings
+    public enum WebsocketDataType
     {
-        public string Secret { get; set; }
+        Tiingo,
+        Finnhub
     }
 }

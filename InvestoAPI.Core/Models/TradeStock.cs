@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace InvestoAPI.Core.Entities
+namespace InvestoAPI.Core.Models
 {
-    public class StockTrade
+    public class TradeStock
     {
         public string Symbol { get; set; }
 

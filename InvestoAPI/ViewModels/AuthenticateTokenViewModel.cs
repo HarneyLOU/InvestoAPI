@@ -6,12 +6,9 @@ using System.Threading.Tasks;
 
 namespace InvestoAPI.Web.ViewModels
 {
-    public class AuthenticateViewModel
+    public class AuthenticateTokenViewModel
     {
         [Required]
-        public string Email { get; set; }
-
-        [Required]
-        public string Password { get; set; }
+        public string Token { get; set; }
     }
 }

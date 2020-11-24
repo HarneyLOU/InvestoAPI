@@ -41,7 +41,7 @@ namespace InvestoAPI.Web.Controllers
             [HttpPost("authenticate")]
             public IActionResult Authenticate([FromBody] AuthenticateViewModel model)
             {
-                var user = _userService.Authenticate(model.Username, model.Password);
+                var user = _userService.Authenticate(model.Email, model.Password);
 
                 if (user == null)
                     return BadRequest(new { message = "Username or password is incorrect" });
@@ -49,12 +49,34 @@ namespace InvestoAPI.Web.Controllers
                 return Ok(new
                 {
                     Id = user.Id,
+                    Email = user.Email,
                     Username = user.Username,
                     FirstName = user.FirstName,
                     LastName = user.LastName,
                     Token = GenerateJwtToken(user)
                 });
             }
+
+        [AllowAnonymous]
+        [HttpPost("authenticate-with-google")]
+        async public Task<IActionResult> AuthenticateWithGoogle([FromBody] AuthenticateTokenViewModel model)
+        {
+            var user = await _userService.AuthenticateWithGoogle(model.Token);
+
+            if (user == null)
+                return BadRequest(new { message = "Username or password is incorrect" });
+
+            return Ok(new
+            {
+                Id = user.Id,
+                Email = user.Email,
+                Username = user.Username,
+                FirstName = user.FirstName,
+                LastName = user.LastName,
+                Token = GenerateJwtToken(user)
+            });
+        }
+
         [AllowAnonymous]
         [HttpPost("register")]
         public IActionResult Register([FromBody] RegisterViewModel model)

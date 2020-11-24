@@ -1,4 +1,5 @@
-﻿using InvestoAPI.Core.Entities;
+﻿using Google.Apis.Auth;
+using InvestoAPI.Core.Entities;
 using InvestoAPI.Core.Helpers.Exceptions;
 using InvestoAPI.Core.Interfaces;
 using Microsoft.Extensions.Logging;
@@ -6,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace InvestoAPI.Infrastructure.Services
 {
@@ -22,12 +24,12 @@ namespace InvestoAPI.Infrastructure.Services
             _context = context;
         }
 
-        public User Authenticate(string username, string password)
+        public User Authenticate(string email, string password)
         {
-            if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(password))
+            if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(password))
                 return null;
 
-            var user = _context.Users.SingleOrDefault(x => x.Username == username);
+            var user = _context.Users.SingleOrDefault(x => x.Email == email);
 
             if (user == null)
                 return null;
@@ -35,6 +37,38 @@ namespace InvestoAPI.Infrastructure.Services
             if (!VerifyPasswordHash(password, user.PasswordHash, user.PasswordSalt))
                 return null;
 
+            return user;
+        }
+
+        async public Task<User> AuthenticateWithGoogle(string token)
+        {
+            if (string.IsNullOrEmpty(token))
+                return null;
+
+            GoogleJsonWebSignature.Payload validPayload;
+            try
+            {
+                validPayload = await GoogleJsonWebSignature.ValidateAsync(token);
+            }
+            catch(InvalidJwtException ex)
+            {
+                return null;
+            }
+
+            if (validPayload == null) return null;
+
+            var user = _context.Users.SingleOrDefault(x => x.Email == validPayload.Email);
+
+            if (user == null)
+            {
+                var newUser = new User
+                {
+                    Email = validPayload.Email,
+                    Username = validPayload.Name
+                };
+                return Create(newUser, Guid.NewGuid().ToString());
+            }
+                
             return user;
         }
 
@@ -53,8 +87,8 @@ namespace InvestoAPI.Infrastructure.Services
             if (string.IsNullOrWhiteSpace(password))
                 throw new AppException("Password is required");
 
-            if (_context.Users.Any(x => x.Username == user.Username))
-                throw new AppException("Username \"" + user.Username + "\" is already taken");
+            if (_context.Users.Any(x => x.Email == user.Email))
+                throw new AppException("Email \"" + user.Email + "\" is already registered");
 
             byte[] passwordHash, passwordSalt;
             CreatePasswordHash(password, out passwordHash, out passwordSalt);
@@ -143,6 +177,11 @@ namespace InvestoAPI.Infrastructure.Services
             }
 
             return true;
+        }
+
+        public string GetRole(int userId)
+        {
+            return _context.Users.Find(userId).Role;
         }
     }
 }
