@@ -17,6 +17,10 @@ namespace InvestoAPI.Web.ViewModels
 
         public decimal InitMoney { get; set; }
 
+        public decimal Balance { get; set; }
+
+        public ICollection<WalletStateViewModel> Possesions { get; set; }
+
         public DateTime Created { get; set; }
     }
 }

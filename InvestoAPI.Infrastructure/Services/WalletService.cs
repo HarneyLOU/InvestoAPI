@@ -1,5 +1,6 @@
 ﻿using InvestoAPI.Core.Entities;
 using InvestoAPI.Core.Interfaces;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -23,6 +24,7 @@ namespace InvestoAPI.Infrastructure.Services
 
         public void AddWallet(Wallet wallet)
         {
+            wallet.Balance = wallet.InitMoney;
             _context.Wallets.Add(wallet);
             _context.SaveChanges();
         }
@@ -36,20 +38,17 @@ namespace InvestoAPI.Infrastructure.Services
 
         public Wallet GetWallet(int id)
         {
-            return _context.Wallets.SingleOrDefault(x => x.WalletId == id);
+            return _context.Wallets.Include(w => w.Possesions).ThenInclude(c => c.Stock).SingleOrDefault(x => x.WalletId == id);
         }
 
         public IEnumerable<Wallet> GetWallets(int userId)
         {
-            return _context.Wallets.Where(x => x.OwnerId == userId);
+            return _context.Wallets.Where(x => x.OwnerId == userId).Include(w => w.Possesions).ThenInclude(c => c.Stock);
         }
 
         public void UpdateWallet(Wallet wallet)
         {
-            var walletToUpdate = GetWallet(wallet.WalletId);
-            walletToUpdate.Name = wallet.Name;
-            walletToUpdate.Description = wallet.Description;
-            _context.Wallets.Update(walletToUpdate);
+            _context.Wallets.Update(wallet);
             _context.SaveChanges();
         }
     }

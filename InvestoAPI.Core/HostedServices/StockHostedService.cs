@@ -20,13 +20,6 @@ namespace InvestoAPI.Core.HostedServices
         private readonly WebsocketService _websocketService;
         private readonly IServiceProvider _serviceProvider;
 
-        //GMT+1 Time Zone
-        private int marketOpenTime = 1530;
-        private int marketCloseTime = 2200;
-
-        private bool updated = false;
-        private bool websocketFailure = false;
-
         public StockHostedService(
             ILogger<StockHostedService> logger,
             RealTimeStockService realTimeStockService,
@@ -42,36 +35,33 @@ namespace InvestoAPI.Core.HostedServices
 
         private void PriceUpdate(object sender)
         {
-            if(IsMarketOpen()) _realTimeStockService.Send();
+            if (_realTimeStockService.IsMarketOpen()) _realTimeStockService.Send();
         }
 
-        private void WebsocketCheckIfFailed(object sender)
-        {
-            if (websocketFailure && _websocketService.IsOpen())
-            {
-                _websocketService.Disconnect("Websocket doesn't provide data", CancellationToken.None);
-                _logger.LogDebug($"Websocket disconnected due to no respond");
-            }
-        }
+        //private void WebsocketCheckIfFailed(object sender)
+        //{
+        //    if (websocketFailure && _websocketService.IsOpen())
+        //    {
+        //        _websocketService.Disconnect("Websocket doesn't provide data", CancellationToken.None);
+        //        _logger.LogDebug($"Websocket disconnected due to no respond");
+        //    }
+        //}
 
-        private void WebsocketSetFailure(object sender)
-        {
-            websocketFailure = true;
-        }
+        //private void WebsocketSetFailure(object sender)
+        //{
+        //    websocketFailure = true;
+        //}
 
-        //Przerobić na dwa niezależne serwisy - spaghetti alert
+        private bool firstRun = true;
+
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
             Init();
-            _realTimeStockService.Send();
             var timer1 = new Timer(PriceUpdate, null, 0, 1000);
-            //var timer2 = new Timer(WebsocketCheckIfFailed, null, 120_000, 120_000);
-            //var timer3 = new Timer(WebsocketSetFailure, null, 0, 12_000);
             while (!stoppingToken.IsCancellationRequested)
             {
-                if (IsMarketOpen())
+                if (_realTimeStockService.IsMarketOpen())
                 {
-                    updated = false;
                     try
                     {
                         if (!_websocketService.IsConnecting() && !_websocketService.IsOpen())
@@ -87,63 +77,51 @@ namespace InvestoAPI.Core.HostedServices
                             _logger.LogDebug("Websocket connected");
                             SubscribeStocks(true);
                             var buffer = new ArraySegment<byte>(new byte[2096]);
-                            while (IsMarketOpen())
+                            while (_realTimeStockService.IsMarketOpen())
                             {
                                 UpdateWithWebsocket(await _websocketService.Receive(buffer, stoppingToken));
                             }
                             await SubscribeStocks(false);
                             await _websocketService.Disconnect("Market Closed", stoppingToken);
                             _logger.LogDebug("Websocket disconnected");
-                            DateTime lastUpdateTime = UpdateWithDatabase().ToLocalTime();
-                            while ((lastUpdateTime.Hour * 100 + lastUpdateTime.Minute) < marketCloseTime)
-                            {
-                                _logger.LogDebug($"Waiting for closed data..");
-                                lastUpdateTime = UpdateWithDatabase().ToLocalTime();
-                                await Task.Delay(10_000);
-                            }
-                            _realTimeStockService.Send();
                         }
                     }
                     catch (Exception ex)
                     {
                         _logger.LogError($"ERROR - {ex.Message}");
                     }
-                    await Task.Delay(1_000);
-                    //UpdateWithDatabase();
-                    _realTimeStockService.Send();
+                    await Task.Delay(10_000);
                 }
                 else
                 {
-                    UpdateWithDatabase();
-                    _realTimeStockService.Send();
-                    var leftToOpening = GetTimeToOpenMarket();
-                    while (leftToOpening.TotalMilliseconds > 0)
+                    _realTimeStockService.Ready = false;
+                    _logger.LogDebug("Waiting for market close prices");
+                    var lastUpdateDate = UpdateWithDatabase().ToLocalTime();
+                    if (!firstRun)
                     {
-                        Console.WriteLine("Market opening in: " + leftToOpening.ToString(@"hh\:mm\:ss"));
-                        await Task.Delay(10_000);
-                        leftToOpening = GetTimeToOpenMarket();
+                        while ((lastUpdateDate.Hour * 100 + lastUpdateDate.Minute) < _realTimeStockService.marketCloseTime)
+                        {
+                            await Task.Delay(5_000);
+                            lastUpdateDate = UpdateWithDatabase().ToLocalTime();
+                        }
                     }
-                    updated = true;
+                    firstRun = false;
+                    var leftToOpening = _realTimeStockService.GetTimeToOpenMarket();
+                    _logger.LogDebug("Market opening in: " + leftToOpening.ToString());
+                    await Task.Delay(leftToOpening);
+
+                    _logger.LogDebug("Waiting for market open prices");
+                    lastUpdateDate = UpdateWithDatabase().ToLocalTime();
+                    while ((lastUpdateDate.Hour * 100 + lastUpdateDate.Minute) < _realTimeStockService.marketOpenTime)
+                    {
+                        await Task.Delay(5_000);
+                        lastUpdateDate = UpdateWithDatabase().ToLocalTime();
+                    }
+                    _realTimeStockService.Ready = true;
                 }
             }
         }
 
-        private bool IsMarketOpen()
-        {
-            DateTime now = DateTime.Now;
-            return (((now.Hour * 100 + now.Minute) < marketCloseTime) && ((now.Hour * 100 + now.Minute) >= marketOpenTime) 
-                && !(now.DayOfWeek == DayOfWeek.Saturday) 
-                && !(now.DayOfWeek == DayOfWeek.Sunday));
-        }
-
-        private TimeSpan GetTimeToOpenMarket()
-        {
-            DateTime now = DateTime.Now;
-            if (now.DayOfWeek == DayOfWeek.Saturday) now = now.AddDays(2);
-            else if (now.DayOfWeek == DayOfWeek.Sunday) now = now.AddDays(1);
-            else if ((now.Hour * 100 + now.Minute) > marketCloseTime) now = now.AddDays(1);
-            return new DateTime(now.Year, now.Month, now.Day, marketOpenTime/100, marketOpenTime%100, 00) - DateTime.Now;
-        }
 
         private void UpdateWithWebsocket(string data)
         {
@@ -169,6 +147,7 @@ namespace InvestoAPI.Core.HostedServices
                     };
                 });
                 foreach(var stock in stocks) _realTimeStockService.Add(stock.Id, stock.Stock);
+                _realTimeStockService.Send();
             }
         }
 
@@ -185,6 +164,7 @@ namespace InvestoAPI.Core.HostedServices
                 });
                 foreach (var stock in stocks) _realTimeStockService.Update(stock);
             }
+            _realTimeStockService.Send();
             return _realTimeStockService.LastUpdate();
         }
 

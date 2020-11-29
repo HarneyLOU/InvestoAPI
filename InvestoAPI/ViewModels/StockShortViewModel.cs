@@ -7,6 +7,8 @@ namespace InvestoAPI.Web.ViewModels
 {
     public class StockShortViewModel
     {
+        public int StockId { get; set; }
+
         public string Symbol { get; set; }
 
         public string Name { get; set; }

@@ -1,5 +1,7 @@
 ﻿using InvestoAPI.Core.Entities;
+using InvestoAPI.Core.Interfaces;
 using InvestoAPI.Core.Services;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System;
@@ -14,6 +16,9 @@ namespace InvestoAPI.Core.HostedServices
         private readonly ILogger<TransactionHostedService> _logger;
         private readonly RealTimeStockService _realTimeStockService;
         private readonly IServiceProvider _serviceProvider;
+        private IOrderService orderService;
+        private IWalletStateService walletStateService;
+        private ITransactionService transactionService;
 
         public TransactionHostedService(
             OrderQueueService orderQueueService,
@@ -30,46 +35,62 @@ namespace InvestoAPI.Core.HostedServices
 
         private void Init()
         {
-            _orderQueueService.AddOrder(new Order
-            {
-                OrderId = 1,
-                WalletId = 1,
-                CompanyId = 1,
-                Amount = 10,
-            });
-            _orderQueueService.AddOrder(new Order
-            {
-                OrderId = 2,
-                WalletId = 1,
-                CompanyId = 2,
-                Amount = 7,
-            });
+            
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            Init();
+            using var scope = _serviceProvider.CreateScope();
+            orderService = scope.ServiceProvider.GetRequiredService<IOrderService>();
+            transactionService = scope.ServiceProvider.GetRequiredService<ITransactionService>();
+            walletStateService = scope.ServiceProvider.GetRequiredService<IWalletStateService>();
+            //Init();
+
             _logger.LogDebug("Transactions begin");
             while (!stoppingToken.IsCancellationRequested)
             {
-                if (!_orderQueueService.IsEmpty())
+                if(true)//_realTimeStockService.IsMarketOpen())
                 {
-                    Order order = _orderQueueService.GetOrder();
-                    var price = _realTimeStockService.GetPrice(order.CompanyId);
-                    _logger.LogDebug($"Order {order.OrderId} realised for { order.Amount * price }");
-                    var transaction = new Transaction
+                    if(true)//_realTimeStockService.Ready)
                     {
-                        Order = order,
-                        Amount = order.Amount,
-                        Price = order.Amount * price,
-                        Realised = DateTime.Now
-                    };
-                    order.Active = false;
-                    //_transactionService.Add(transaction);
-                    //_orderService.Update(order);
-                    _orderQueueService.FinishOrder();
+                        _orderQueueService.AddOrders(orderService.GetActiveOrders());
+                        while (!_orderQueueService.IsEmpty())
+                        {
+                            Order order = _orderQueueService.GetOrder();
+                            try
+                            {
+                                var price = _realTimeStockService.GetPrice(order.StockId);
+                                _logger.LogDebug($"Order {order.OrderId} realised for { order.Amount * price }");
+                                var transaction = new Transaction
+                                {
+                                    Order = order,
+                                    Amount = order.Amount,
+                                    Price = order.Amount * price,
+                                    Realised = DateTime.Now
+                                };
+                                var newOrder = walletStateService.UpsertWalletState(transaction);
+                                orderService.UpdateOrder(newOrder);
+                                if(newOrder.Status == "Success") transactionService.AddTransaction(transaction);
+                                _orderQueueService.FinishOrder();
+                            }
+                            catch (Exception ex)
+                            {
+                                _logger.LogError($"ERROR - {ex.Message}");
+                            }
+                        }
+                        await Task.Delay(10_000);
+                    } 
+                    else
+                    {
+                        await Task.Delay(10_000);
+                    }
+                } 
+                else
+                {
+                    _orderQueueService.CleanQueue();
+                    var leftToOpening = _realTimeStockService.GetTimeToOpenMarket();
+                    await Task.Delay(leftToOpening);
                 }
-               await Task.Delay(1_000);
             }
         }
     }

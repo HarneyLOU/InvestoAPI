@@ -18,8 +18,13 @@ namespace InvestoAPI.Core.Entities
         public int OwnerId { get; set; }
         public User Owner { get; set; }
 
+        public ICollection<WalletState> Possesions { get; set; }
+
         [Column(TypeName = "decimal(18,4)")]
         public decimal InitMoney { get; set; }
+
+        [Column(TypeName = "decimal(18,4)")]
+        public decimal Balance { get; set; }
 
         public DateTime Created { get; set; }
     }

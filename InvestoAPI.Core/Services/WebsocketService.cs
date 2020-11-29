@@ -46,6 +46,7 @@ namespace InvestoAPI.Core.Services
         async public Task Connect(CancellationToken stoppingToken)
         {
             WebSocket = GetClient();
+            WebSocket.Options.SetRequestHeader("Content-Type", "application/json");
             await WebSocket.ConnectAsync(new Uri(url), stoppingToken);
         }
 

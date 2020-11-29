@@ -1,4 +1,5 @@
 ﻿using InvestoAPI.Core.Interfaces;
+using InvestoAPI.Core.Services;
 using InvestoAPI.Infrastructure;
 using InvestoAPI.Web.ViewModels;
 using Microsoft.AspNetCore.Mvc;
@@ -14,11 +15,13 @@ namespace InvestoAPI.Controllers
     {
         private readonly IStockService _stockService;
         private readonly ICompanyService _companyService;
+        private readonly RealTimeStockService _realTimeStockService;
 
-        public StockController(IStockService stockService, ICompanyService companyService)
+        public StockController(IStockService stockService, ICompanyService companyService, RealTimeStockService realTimeStockService)
         {
             _stockService = stockService;
             _companyService = companyService;
+            _realTimeStockService = realTimeStockService;
         }
 
         [HttpGet("history")]
@@ -37,16 +40,17 @@ namespace InvestoAPI.Controllers
                 (stock, company) =>
                     new StockShortViewModel()
                     {
+                        StockId = stock.StockId,
                         Symbol = stock.Symbol,
                         Name = company.Name,
                         Image = company.Image,
-                        Price = stock.Price,
+                        Price = _realTimeStockService.GetPrice(stock.StockId),
                         Open = stock.Open,
                         PrevClose = stock.Close,
                         Low = stock.Low,
                         High = stock.High,
-                        Change = decimal.Round(((stock.Price - stock.Close) / stock.Close), 4, MidpointRounding.AwayFromZero),
-                        Date = DateTime.SpecifyKind(stock.Date, DateTimeKind.Utc)
+                        Change = decimal.Round(((_realTimeStockService.GetPrice(stock.StockId) - stock.Close) / stock.Close), 4, MidpointRounding.AwayFromZero),
+                        Date = DateTime.SpecifyKind(_realTimeStockService.GetDate(stock.StockId), DateTimeKind.Utc)
                     }
                 );
             return Ok(stocksShort);

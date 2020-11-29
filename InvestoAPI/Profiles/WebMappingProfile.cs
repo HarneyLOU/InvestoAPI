@@ -15,7 +15,15 @@ namespace InvestoAPI.Web.Profiles
             CreateMap<User, UserViewModel>();
             CreateMap<RegisterViewModel, User>();
             CreateMap<UpdateViewModel, User>();
-            CreateMap<WalletViewModel, Wallet>().ReverseMap();
+            CreateMap<OrderViewModel, Order>()
+                .ReverseMap()
+                .ForMember(dest => dest.Symbol, opt => opt.MapFrom(src => src.Company.Symbol));
+            CreateMap<WalletViewModel, Wallet>()
+                .ReverseMap();
+            CreateMap<WalletStateViewModel, WalletState>()
+                .ReverseMap()
+                .ForMember(dest => dest.Symbol, opt => opt.MapFrom(src => src.Stock.Symbol));
+            CreateMap<TransactionViewModel, Transaction>().ReverseMap();
         }
     }
 }

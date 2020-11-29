@@ -30,6 +30,7 @@ namespace InvestoAPI.Web.Controllers
         {
             var userId = HttpContext.User.Identity.Name;
             var walletModel = _walletService.GetWallet(id);
+            if (walletModel == null) return BadRequest("Wallet doesn't exist");
             if(walletModel.OwnerId == int.Parse(userId)) return Ok(_mapper.Map<WalletViewModel>(walletModel));
             else return BadRequest();
         }

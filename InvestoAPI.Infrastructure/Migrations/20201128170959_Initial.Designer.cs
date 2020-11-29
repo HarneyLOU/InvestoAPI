@@ -10,8 +10,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace InvestoAPI.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationContext))]
-    [Migration("20201122214318_5")]
-    partial class _5
+    [Migration("20201128170959_Initial")]
+    partial class Initial
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -84,18 +84,24 @@ namespace InvestoAPI.Infrastructure.Migrations
                     b.Property<bool>("Buy")
                         .HasColumnType("bit");
 
-                    b.Property<int>("CompanyId")
-                        .HasColumnType("int");
-
                     b.Property<DateTime>("Created")
                         .HasColumnType("datetime2");
+
+                    b.Property<string>("Status")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("StockId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("int");
 
                     b.Property<int>("WalletId")
                         .HasColumnType("int");
 
                     b.HasKey("OrderId");
 
-                    b.HasIndex("CompanyId");
+                    b.HasIndex("StockId");
 
                     b.HasIndex("WalletId");
 
@@ -230,6 +236,9 @@ namespace InvestoAPI.Infrastructure.Migrations
                         .HasColumnType("int")
                         .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
+                    b.Property<decimal>("Balance")
+                        .HasColumnType("decimal(18,4)");
+
                     b.Property<DateTime>("Created")
                         .HasColumnType("datetime2");
 
@@ -252,11 +261,35 @@ namespace InvestoAPI.Infrastructure.Migrations
                     b.ToTable("Wallets");
                 });
 
+            modelBuilder.Entity("InvestoAPI.Core.Entities.WalletState", b =>
+                {
+                    b.Property<int>("WalletId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("StockId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Amount")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("AveragePrice")
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<DateTime>("Updated")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("WalletId", "StockId");
+
+                    b.HasIndex("StockId");
+
+                    b.ToTable("WalletsState");
+                });
+
             modelBuilder.Entity("InvestoAPI.Core.Entities.Order", b =>
                 {
                     b.HasOne("InvestoAPI.Core.Entities.Company", "Company")
                         .WithMany()
-                        .HasForeignKey("CompanyId")
+                        .HasForeignKey("StockId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -281,6 +314,21 @@ namespace InvestoAPI.Infrastructure.Migrations
                     b.HasOne("InvestoAPI.Core.Entities.User", "Owner")
                         .WithMany("Wallets")
                         .HasForeignKey("OwnerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("InvestoAPI.Core.Entities.WalletState", b =>
+                {
+                    b.HasOne("InvestoAPI.Core.Entities.Company", "Stock")
+                        .WithMany()
+                        .HasForeignKey("StockId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("InvestoAPI.Core.Entities.Wallet", "Wallet")
+                        .WithMany("Possesions")
+                        .HasForeignKey("WalletId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

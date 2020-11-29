@@ -1,6 +1,8 @@
-﻿using System;
+﻿using InvestoAPI.Core.Enums;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Text;
 
 namespace InvestoAPI.Core.Entities
@@ -13,7 +15,9 @@ namespace InvestoAPI.Core.Entities
         public int WalletId { get; set; }
         public Wallet Wallet { get; set; }
 
-        public int CompanyId { get; set; }
+        public int StockId { get; set; }
+
+        [ForeignKey("StockId")]
         public Company Company { get; set; }
 
         public ICollection<Transaction> Transactions { get; set; }
@@ -23,6 +27,10 @@ namespace InvestoAPI.Core.Entities
         public bool Buy { get; set; }
 
         public bool Active { get; set; }
+
+        public OrderType Type { get; set; }
+
+        public string Status { get; set; }
 
         public DateTime Created { get; set; }
     }

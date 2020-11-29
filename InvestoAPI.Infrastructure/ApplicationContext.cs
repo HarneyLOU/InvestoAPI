@@ -16,6 +16,8 @@ namespace InvestoAPI.Infrastructure
                 .HasKey(t => new { t.StockId, t.Date });
             builder.Entity<StockDaily>()
                 .HasKey(t => new { t.StockId, t.Date });
+            builder.Entity<WalletState>()
+                .HasKey(t => new { t.WalletId, t.StockId });
         }
 
         public DbSet<User> Users { get; set; }
@@ -23,6 +25,7 @@ namespace InvestoAPI.Infrastructure
         public DbSet<Stock> Stocks { get; set; }
         public DbSet<StockDaily> StocksDaily { get; set; }
         public DbSet<Wallet> Wallets { get; set; }
+        public DbSet<WalletState> WalletsState { get; set; }
         public DbSet<Transaction> Transactions { get; set; }
         public DbSet<Order> Orders { get; set; }
     }
