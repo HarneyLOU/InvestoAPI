@@ -20,6 +20,9 @@ namespace InvestoAPI.Core.Entities
 
         public ICollection<WalletState> Possesions { get; set; }
 
+        public int? TeamId { get; set; }
+        public Team? Team { get; set; }
+
         [Column(TypeName = "decimal(18,4)")]
         public decimal InitMoney { get; set; }
 

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using AutoMapper;
 using InvestoAPI.Core.Entities;
+using InvestoAPI.Core.Enums;
 using InvestoAPI.Core.Interfaces;
 using InvestoAPI.Web.ViewModels;
 using Microsoft.AspNetCore.Authorization;
@@ -33,12 +34,12 @@ namespace InvestoAPI.Web.Controllers
         {
             var userId = HttpContext.User.Identity.Name;
             var walletModel = _walletService.GetWallet(id);
-            if (walletModel.OwnerId == int.Parse(userId))
+            if (walletModel != null && walletModel.OwnerId == int.Parse(userId))
             {
                 var orderModel = _orderService.GetOrdersFromWallet(id);
                 return Ok(_mapper.Map<IList<OrderViewModel>>(orderModel));
             }
-            else return BadRequest();
+            else return NotFound();
         }
 
         [HttpGet("{id}")]
@@ -46,8 +47,17 @@ namespace InvestoAPI.Web.Controllers
         {
             var userId = HttpContext.User.Identity.Name;
             var orderModel = _orderService.GetOrder(id);
-            if (orderModel.Wallet.OwnerId == int.Parse(userId)) return Ok(_mapper.Map<OrderViewModel>(orderModel));
-            else return BadRequest();
+            if (orderModel != null && orderModel.Wallet.OwnerId == int.Parse(userId)) return Ok(_mapper.Map<OrderViewModel>(orderModel));
+            else return NotFound();
+        }
+
+        [HttpGet("cancel/{id}")]
+        public IActionResult CancelOrder(int id)
+        {
+            var userId = HttpContext.User.Identity.Name;
+            var orderModel = _orderService.GetOrder(id);
+            if (orderModel != null && orderModel.Wallet.OwnerId == int.Parse(userId)) return Ok(_mapper.Map<OrderViewModel>(_orderService.CancelOrder(orderModel)));
+            else return NotFound();
         }
 
         [HttpPost]
@@ -57,9 +67,8 @@ namespace InvestoAPI.Web.Controllers
             if (userId == null) return BadRequest();
 
             var order = _mapper.Map<Order>(model);
-            order.Created = DateTime.Now;
-            order.Status = "Pending";
-            order.Active = true;
+
+
             _orderService.AddOrder(order);
 
             return CreatedAtAction(nameof(GetOrder), new { id = order.OrderId }, _mapper.Map<OrderViewModel>(order));

@@ -19,10 +19,14 @@ namespace InvestoAPI.Web.ViewModels
 
         public bool Buy { get; set; }
 
-        public int Type { get; set; }
+        public decimal? Limit { get; set; }
+
+        public DateTimeOffset? ActivationDate { get; set; }
+
+        public DateTimeOffset? ExpiryDate { get; set; }
 
         public string Status { get; set; }
 
-        public DateTime Created { get; set; }
+        public DateTimeOffset Created { get; set; }
     }
 }

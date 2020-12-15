@@ -10,14 +10,14 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace InvestoAPI.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationContext))]
-    [Migration("20201128170959_Initial")]
-    partial class Initial
+    [Migration("20201213154208_1")]
+    partial class _1
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "3.1.9")
+                .HasAnnotation("ProductVersion", "3.1.10")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128)
                 .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
@@ -68,12 +68,48 @@ namespace InvestoAPI.Infrastructure.Migrations
                     b.ToTable("Companies");
                 });
 
+            modelBuilder.Entity("InvestoAPI.Core.Entities.News", b =>
+                {
+                    b.Property<int>("NewsId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+
+                    b.Property<string>("Image")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTimeOffset>("PublishedDate")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Site")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Symbol")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Text")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Title")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Url")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("NewsId");
+
+                    b.ToTable("News");
+                });
+
             modelBuilder.Entity("InvestoAPI.Core.Entities.Order", b =>
                 {
                     b.Property<int>("OrderId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int")
                         .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+
+                    b.Property<DateTimeOffset?>("ActivationDate")
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<bool>("Active")
                         .HasColumnType("bit");
@@ -84,16 +120,22 @@ namespace InvestoAPI.Infrastructure.Migrations
                     b.Property<bool>("Buy")
                         .HasColumnType("bit");
 
-                    b.Property<DateTime>("Created")
-                        .HasColumnType("datetime2");
+                    b.Property<DateTimeOffset>("Created")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<DateTimeOffset?>("ExpiryDate")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<decimal?>("Limit")
+                        .HasColumnType("decimal(18,4)");
 
                     b.Property<string>("Status")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("StockId")
+                    b.Property<int>("StatusEnum")
                         .HasColumnType("int");
 
-                    b.Property<int>("Type")
+                    b.Property<int>("StockId")
                         .HasColumnType("int");
 
                     b.Property<int>("WalletId")
@@ -106,6 +148,30 @@ namespace InvestoAPI.Infrastructure.Migrations
                     b.HasIndex("WalletId");
 
                     b.ToTable("Orders");
+                });
+
+            modelBuilder.Entity("InvestoAPI.Core.Entities.Split", b =>
+                {
+                    b.Property<int>("SplitId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+
+                    b.Property<DateTimeOffset>("Date")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<float>("Denominator")
+                        .HasColumnType("real");
+
+                    b.Property<float>("Numerator")
+                        .HasColumnType("real");
+
+                    b.Property<int>("StockId")
+                        .HasColumnType("int");
+
+                    b.HasKey("SplitId");
+
+                    b.ToTable("Split");
                 });
 
             modelBuilder.Entity("InvestoAPI.Core.Entities.Stock", b =>
@@ -168,6 +234,50 @@ namespace InvestoAPI.Infrastructure.Migrations
                     b.HasKey("StockId", "Date");
 
                     b.ToTable("StocksDaily");
+                });
+
+            modelBuilder.Entity("InvestoAPI.Core.Entities.Team", b =>
+                {
+                    b.Property<int>("TeamId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+
+                    b.Property<Guid>("Code")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("Created")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("OwnerId")
+                        .HasColumnType("int");
+
+                    b.HasKey("TeamId");
+
+                    b.HasIndex("Code")
+                        .IsUnique();
+
+                    b.HasIndex("OwnerId");
+
+                    b.ToTable("Teams");
+                });
+
+            modelBuilder.Entity("InvestoAPI.Core.Entities.TeamUser", b =>
+                {
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TeamId")
+                        .HasColumnType("int");
+
+                    b.HasKey("UserId", "TeamId");
+
+                    b.HasIndex("TeamId");
+
+                    b.ToTable("TeamUser");
                 });
 
             modelBuilder.Entity("InvestoAPI.Core.Entities.Transaction", b =>
@@ -254,9 +364,14 @@ namespace InvestoAPI.Infrastructure.Migrations
                     b.Property<int>("OwnerId")
                         .HasColumnType("int");
 
+                    b.Property<int?>("TeamId")
+                        .HasColumnType("int");
+
                     b.HasKey("WalletId");
 
                     b.HasIndex("OwnerId");
+
+                    b.HasIndex("TeamId");
 
                     b.ToTable("Wallets");
                 });
@@ -300,6 +415,30 @@ namespace InvestoAPI.Infrastructure.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("InvestoAPI.Core.Entities.Team", b =>
+                {
+                    b.HasOne("InvestoAPI.Core.Entities.User", "Owner")
+                        .WithMany("OwningTeams")
+                        .HasForeignKey("OwnerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("InvestoAPI.Core.Entities.TeamUser", b =>
+                {
+                    b.HasOne("InvestoAPI.Core.Entities.Team", "Team")
+                        .WithMany("Members")
+                        .HasForeignKey("TeamId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("InvestoAPI.Core.Entities.User", "User")
+                        .WithMany("TeamUsers")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("InvestoAPI.Core.Entities.Transaction", b =>
                 {
                     b.HasOne("InvestoAPI.Core.Entities.Order", "Order")
@@ -316,6 +455,10 @@ namespace InvestoAPI.Infrastructure.Migrations
                         .HasForeignKey("OwnerId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.HasOne("InvestoAPI.Core.Entities.Team", "Team")
+                        .WithMany("Wallets")
+                        .HasForeignKey("TeamId");
                 });
 
             modelBuilder.Entity("InvestoAPI.Core.Entities.WalletState", b =>

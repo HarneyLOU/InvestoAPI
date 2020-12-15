@@ -26,6 +26,16 @@ namespace InvestoAPI.Infrastructure.Services
             return _context.Companies.Distinct(); ;
         }
 
+        public Company Get(int id)
+        {
+            return _context.Companies.Where(c => c.StockId == id).FirstOrDefault();
+        }
+
+        public Company Get(string symbol)
+        {
+            return _context.Companies.Where(c => c.Symbol == symbol).FirstOrDefault();
+        }
+
         public string GetImage(string symbol)
         {
             return _context.Companies.Where(c => c.Symbol == symbol).Select(c => c.Image).FirstOrDefault();

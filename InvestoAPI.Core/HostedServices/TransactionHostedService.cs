@@ -1,4 +1,5 @@
 ﻿using InvestoAPI.Core.Entities;
+using InvestoAPI.Core.Enums;
 using InvestoAPI.Core.Interfaces;
 using InvestoAPI.Core.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -17,8 +18,6 @@ namespace InvestoAPI.Core.HostedServices
         private readonly RealTimeStockService _realTimeStockService;
         private readonly IServiceProvider _serviceProvider;
         private IOrderService orderService;
-        private IWalletStateService walletStateService;
-        private ITransactionService transactionService;
 
         public TransactionHostedService(
             OrderQueueService orderQueueService,
@@ -35,43 +34,62 @@ namespace InvestoAPI.Core.HostedServices
 
         private void Init()
         {
-            
+
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
             using var scope = _serviceProvider.CreateScope();
             orderService = scope.ServiceProvider.GetRequiredService<IOrderService>();
-            transactionService = scope.ServiceProvider.GetRequiredService<ITransactionService>();
-            walletStateService = scope.ServiceProvider.GetRequiredService<IWalletStateService>();
             //Init();
 
-            _logger.LogDebug("Transactions begin");
+            _logger.LogDebug("Transactions has started");
             while (!stoppingToken.IsCancellationRequested)
             {
-                if(true)//_realTimeStockService.IsMarketOpen())
+                //Check if market is open
+                if (_realTimeStockService.IsMarketOpen())
                 {
-                    if(true)//_realTimeStockService.Ready)
+                    //Check if opening prices are pulled
+                    if (_realTimeStockService.Ready)
                     {
-                        _orderQueueService.AddOrders(orderService.GetActiveOrders());
+                        try
+                        {
+                            //Retrieve active orders
+                            _orderQueueService.AddOrders(orderService.GetActiveOrders());
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogError($"RETRIVAL OF ORDERS ERROR - {ex.Message}");
+                            await Task.Delay(10_000);
+                        }
                         while (!_orderQueueService.IsEmpty())
                         {
-                            Order order = _orderQueueService.GetOrder();
                             try
                             {
+                                //Take first order from the queue
+                                Order order = _orderQueueService.GetOrder();
+                                //Take current price for the stock
                                 var price = _realTimeStockService.GetPrice(order.StockId);
-                                _logger.LogDebug($"Order {order.OrderId} realised for { order.Amount * price }");
-                                var transaction = new Transaction
+                                //Check whether order with limit fulfill a condition
+                                if (
+                                   ((order.Buy && price <= order.Limit) || (!order.Buy && price >= order.Limit))
+                                   || order.Limit == null || order.ExpiryDate <= DateTime.Now)
                                 {
-                                    Order = order,
-                                    Amount = order.Amount,
-                                    Price = order.Amount * price,
-                                    Realised = DateTime.Now
-                                };
-                                var newOrder = walletStateService.UpsertWalletState(transaction);
-                                orderService.UpdateOrder(newOrder);
-                                if(newOrder.Status == "Success") transactionService.AddTransaction(transaction);
-                                _orderQueueService.FinishOrder();
+                                    Transaction transaction = new Transaction
+                                    {
+                                        Order = order,
+                                        Amount = order.Amount,
+                                        Price = order.Amount * price,
+                                        Realised = DateTime.Now
+                                    };
+                                    //Realize an order and dequeue if it's finished or cancelled for some reasons
+                                    var consumedOrder = await orderService.ConsumeTransaction(transaction);
+                                    if (consumedOrder.StatusEnum != OrderStatusEnum.Partially) _orderQueueService.FinishOrder();
+                                }
+                                else
+                                {
+                                    _orderQueueService.FinishOrder();
+                                }
                             }
                             catch (Exception ex)
                             {
@@ -79,16 +97,17 @@ namespace InvestoAPI.Core.HostedServices
                             }
                         }
                         await Task.Delay(10_000);
-                    } 
+                    }
                     else
                     {
                         await Task.Delay(10_000);
                     }
-                } 
+                }
                 else
                 {
                     _orderQueueService.CleanQueue();
                     var leftToOpening = _realTimeStockService.GetTimeToOpenMarket();
+                    _logger.LogDebug($"Transactions has been stopped");
                     await Task.Delay(leftToOpening);
                 }
             }

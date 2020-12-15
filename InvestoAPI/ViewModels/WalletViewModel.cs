@@ -15,6 +15,8 @@ namespace InvestoAPI.Web.ViewModels
 
         public int OwnerId { get; set; }
 
+        public int? TeamId { get; set; }
+
         public decimal InitMoney { get; set; }
 
         public decimal Balance { get; set; }

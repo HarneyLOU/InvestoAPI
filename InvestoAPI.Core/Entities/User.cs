@@ -16,5 +16,7 @@ namespace InvestoAPI.Core.Entities
         public byte[] PasswordSalt { get; set; }
 
         public ICollection<Wallet> Wallets { get; set; }
+        public ICollection<TeamUser> TeamUsers { get; set; }
+        public ICollection<Team> OwningTeams { get; set; }
     }
 }

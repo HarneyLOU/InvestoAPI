@@ -30,9 +30,9 @@ namespace InvestoAPI.Web.Controllers
         {
             var userId = HttpContext.User.Identity.Name;
             var walletModel = _walletService.GetWallet(id);
-            if (walletModel == null) return BadRequest("Wallet doesn't exist");
+            if (walletModel == null) return NotFound("Wallet doesn't exist");
             if(walletModel.OwnerId == int.Parse(userId)) return Ok(_mapper.Map<WalletViewModel>(walletModel));
-            else return BadRequest();
+            else return NotFound();
         }
 
         [HttpGet]
@@ -48,11 +48,12 @@ namespace InvestoAPI.Web.Controllers
         public IActionResult AddWallet([FromBody] WalletViewModel model)
         {
             var userId = HttpContext.User.Identity.Name;
-            if (userId == null) return BadRequest();
+            if (userId == null) return NotFound();
 
             var wallet = _mapper.Map<Wallet>(model);
             wallet.OwnerId = int.Parse(userId);
             wallet.Created = DateTime.Now;
+            wallet.TeamId = model.TeamId;
             _walletService.AddWallet(wallet);
             return CreatedAtAction(nameof(GetWallet), new { id = wallet.WalletId }, _mapper.Map<WalletViewModel>(wallet));
         }
@@ -67,7 +68,7 @@ namespace InvestoAPI.Web.Controllers
                 _walletService.DeleteWallet(id);
                 return NoContent();
             }
-            else return BadRequest();
+            else return NotFound();
         }
 
         [HttpPut("{id}")]
@@ -75,16 +76,25 @@ namespace InvestoAPI.Web.Controllers
         {
             if (id != wallet.WalletId)
             {
-                return BadRequest();
+                return NotFound();
             }
             var userId = HttpContext.User.Identity.Name;
             var walletModel = _walletService.GetWallet(id);
             if (walletModel.OwnerId == int.Parse(userId))
             {
-                _walletService.UpdateWallet(_mapper.Map<Wallet>(wallet));
+                walletModel.Name = wallet.Name;
+                walletModel.Description = wallet.Description;
+                if( wallet.InitMoney > walletModel.InitMoney)
+                {
+                    var difference = wallet.InitMoney - walletModel.InitMoney;
+                    walletModel.InitMoney = wallet.InitMoney;
+                    walletModel.Balance += difference;
+                }
+
+                _walletService.UpdateWallet(walletModel);
                 return NoContent();
             }
-            else return BadRequest();
+            else return NotFound();
         }
     }
 }

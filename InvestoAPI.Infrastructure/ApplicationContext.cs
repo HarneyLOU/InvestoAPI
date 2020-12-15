@@ -18,6 +18,24 @@ namespace InvestoAPI.Infrastructure
                 .HasKey(t => new { t.StockId, t.Date });
             builder.Entity<WalletState>()
                 .HasKey(t => new { t.WalletId, t.StockId });
+            builder.Entity<Team>().HasOne(t => t.Owner).WithMany(u => u.OwningTeams);
+
+            builder.Entity<TeamUser>()
+                .HasKey(t => new { t.UserId, t.TeamId });
+
+            builder.Entity<TeamUser>()
+                .HasOne(tu => tu.Team)
+                .WithMany(t => t.Members)
+                .HasForeignKey(tu => tu.TeamId).OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<TeamUser>()
+                .HasOne(tu => tu.User)
+                .WithMany(u => u.TeamUsers)
+                .HasForeignKey(tu => tu.UserId).OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<Team>()
+                .HasIndex(t => t.Code)
+                .IsUnique();
         }
 
         public DbSet<User> Users { get; set; }
@@ -28,5 +46,8 @@ namespace InvestoAPI.Infrastructure
         public DbSet<WalletState> WalletsState { get; set; }
         public DbSet<Transaction> Transactions { get; set; }
         public DbSet<Order> Orders { get; set; }
+        public DbSet<News> News { get; set; }
+        public DbSet<Split> Split { get; set; }
+        public DbSet<Team> Teams { get; set; }
     }
 }

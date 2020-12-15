@@ -20,6 +20,8 @@ namespace InvestoAPI.Core.HostedServices
         private readonly WebsocketService _websocketService;
         private readonly IServiceProvider _serviceProvider;
 
+        private string marketStatus = "Synchronizing";
+
         public StockHostedService(
             ILogger<StockHostedService> logger,
             RealTimeStockService realTimeStockService,
@@ -38,30 +40,28 @@ namespace InvestoAPI.Core.HostedServices
             if (_realTimeStockService.IsMarketOpen()) _realTimeStockService.Send();
         }
 
-        //private void WebsocketCheckIfFailed(object sender)
-        //{
-        //    if (websocketFailure && _websocketService.IsOpen())
-        //    {
-        //        _websocketService.Disconnect("Websocket doesn't provide data", CancellationToken.None);
-        //        _logger.LogDebug($"Websocket disconnected due to no respond");
-        //    }
-        //}
+        private void MarketUpdate(object sender)
+        {
+            _realTimeStockService.NotifyAboutMarketStatus(marketStatus);
+        }
 
-        //private void WebsocketSetFailure(object sender)
-        //{
-        //    websocketFailure = true;
-        //}
+        private void NewsUpdate(object sender)
+        {
+            PullNews();
+        }
 
-        private bool firstRun = true;
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
             Init();
-            var timer1 = new Timer(PriceUpdate, null, 0, 1000);
+            var marketUpdate = new Timer(MarketUpdate, null, 0, 1000);
+            var priceUpdate = new Timer(PriceUpdate, null, 0, 1000);
+            var newsUpdate = new Timer(NewsUpdate, null, 0, 1000*60*60);
             while (!stoppingToken.IsCancellationRequested)
             {
                 if (_realTimeStockService.IsMarketOpen())
                 {
+                    marketStatus = "Open";
                     try
                     {
                         if (!_websocketService.IsConnecting() && !_websocketService.IsOpen())
@@ -74,6 +74,7 @@ namespace InvestoAPI.Core.HostedServices
                         }
                         if (_websocketService.IsOpen())
                         {
+                            _realTimeStockService.Ready = true;
                             _logger.LogDebug("Websocket connected");
                             SubscribeStocks(true);
                             var buffer = new ArraySegment<byte>(new byte[2096]);
@@ -84,6 +85,16 @@ namespace InvestoAPI.Core.HostedServices
                             await SubscribeStocks(false);
                             await _websocketService.Disconnect("Market Closed", stoppingToken);
                             _logger.LogDebug("Websocket disconnected");
+                            marketStatus = "Closing";
+                            _logger.LogDebug("Waiting for market close prices");
+                            var lastUpdateDate = UpdateWithDatabaseEnd();
+
+                            while ((lastUpdateDate.Hour * 100 + lastUpdateDate.Minute) < _realTimeStockService.marketCloseTime)
+                            {
+                                await Task.Delay(5_000);
+                                lastUpdateDate = UpdateWithDatabaseEnd();
+                            }
+                            _realTimeStockService.Send();
                         }
                     }
                     catch (Exception ex)
@@ -94,29 +105,21 @@ namespace InvestoAPI.Core.HostedServices
                 }
                 else
                 {
-                    _realTimeStockService.Ready = false;
-                    _logger.LogDebug("Waiting for market close prices");
-                    var lastUpdateDate = UpdateWithDatabase().ToLocalTime();
-                    if (!firstRun)
-                    {
-                        while ((lastUpdateDate.Hour * 100 + lastUpdateDate.Minute) < _realTimeStockService.marketCloseTime)
-                        {
-                            await Task.Delay(5_000);
-                            lastUpdateDate = UpdateWithDatabase().ToLocalTime();
-                        }
-                    }
-                    firstRun = false;
+                    marketStatus = "Closed";
                     var leftToOpening = _realTimeStockService.GetTimeToOpenMarket();
                     _logger.LogDebug("Market opening in: " + leftToOpening.ToString());
                     await Task.Delay(leftToOpening);
 
+                    marketStatus = "Opening";
                     _logger.LogDebug("Waiting for market open prices");
-                    lastUpdateDate = UpdateWithDatabase().ToLocalTime();
+                    var lastUpdateDate = UpdateWithDatabaseOpen();
                     while ((lastUpdateDate.Hour * 100 + lastUpdateDate.Minute) < _realTimeStockService.marketOpenTime)
                     {
                         await Task.Delay(5_000);
-                        lastUpdateDate = UpdateWithDatabase().ToLocalTime();
+                        lastUpdateDate = UpdateWithDatabaseOpen();
                     }
+                    PullHistoricalPrices();
+                    PullSplits();
                     _realTimeStockService.Ready = true;
                 }
             }
@@ -131,6 +134,8 @@ namespace InvestoAPI.Core.HostedServices
 
         private void Init()
         {
+            PullSplits();
+            PullHistoricalPrices();
             using (var scope = _serviceProvider.CreateScope())
             {
                 var _service = scope.ServiceProvider.GetRequiredService<IStockService>();
@@ -139,9 +144,12 @@ namespace InvestoAPI.Core.HostedServices
                     {
                         Stock = new TradeStock()
                         {
+                            Low = s.Low,
+                            High = s.High,
                             Symbol = s.Symbol,
                             Price = s.Price,
-                            Date = DateTime.SpecifyKind(s.Date, DateTimeKind.Utc),
+                            Date = DateTime.SpecifyKind(s.Date, DateTimeKind.Utc).ToLocalTime(),
+
                         },
                         Id = s.StockId
                     };
@@ -151,18 +159,75 @@ namespace InvestoAPI.Core.HostedServices
             }
         }
 
-        private DateTime UpdateWithDatabase()
+        private async void PullNews()
+        {
+            using (var scope = _serviceProvider.CreateScope())
+            {
+                var _companyService = scope.ServiceProvider.GetRequiredService<ICompanyService>();
+                string[] companySymbols = _companyService.GetAll().Select(s => s.Symbol).ToArray();
+                var _newsService = scope.ServiceProvider.GetRequiredService<INewsService>();
+                await _newsService.UpdateWithDataProvider(companySymbols);
+            }
+        }
+
+        private async void PullSplits()
+        {
+            using (var scope = _serviceProvider.CreateScope())
+            {
+                var _companyService = scope.ServiceProvider.GetRequiredService<ICompanyService>();
+                string[] companySymbols = _companyService.GetAll().Select(s => s.Symbol).ToArray();
+                var _splitService = scope.ServiceProvider.GetRequiredService<ISplitService>();
+                await _splitService.Split(companySymbols);
+            }
+        }
+
+        private async void PullHistoricalPrices()
+        {
+            using (var scope = _serviceProvider.CreateScope())
+            {
+                var _companyService = scope.ServiceProvider.GetRequiredService<ICompanyService>();
+                var companies = _companyService.GetAll().ToArray();
+                var _stockService = scope.ServiceProvider.GetRequiredService<IStockService>();
+                foreach(var company in companies)
+                {
+                    await _stockService.UpdatePrices(company.StockId, company.Symbol);
+                }
+            }
+        }
+
+        private DateTime UpdateWithDatabaseOpen()
         {
             using (var scope = _serviceProvider.CreateScope())
             {
                 var _service = scope.ServiceProvider.GetRequiredService<IStockService>();
                 var stocks = _service.GetStockDailyCurrentAll().Select(s => new TradeStock()
                 {
+                    Low = s.Low,
+                    High = s.High,
                     Symbol = s.Symbol,
                     Price = s.Price,
-                    Date = DateTime.SpecifyKind(s.Date, DateTimeKind.Utc),
+                    Date = DateTime.SpecifyKind(s.Date, DateTimeKind.Utc).ToLocalTime(),
                 });
-                foreach (var stock in stocks) _realTimeStockService.Update(stock);
+                foreach (var stock in stocks) _realTimeStockService.UpdateOpen(stock);
+            }
+            _realTimeStockService.Send();
+            return _realTimeStockService.LastUpdate();
+        }
+
+        private DateTime UpdateWithDatabaseEnd()
+        {
+            using (var scope = _serviceProvider.CreateScope())
+            {
+                var _service = scope.ServiceProvider.GetRequiredService<IStockService>();
+                var stocks = _service.GetStockDailyCurrentAll().Select(s => new TradeStock()
+                {
+                    Low = s.Low,
+                    High = s.High,
+                    Symbol = s.Symbol,
+                    Price = s.Price,
+                    Date = DateTime.SpecifyKind(s.Date, DateTimeKind.Utc).ToLocalTime(),
+                });
+                foreach (var stock in stocks) _realTimeStockService.UpdateOpen(stock);
             }
             _realTimeStockService.Send();
             return _realTimeStockService.LastUpdate();

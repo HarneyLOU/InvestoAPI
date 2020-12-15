@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace InvestoAPI.Infrastructure.Migrations
 {
-    public partial class Initial : Migration
+    public partial class init : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -28,6 +28,41 @@ namespace InvestoAPI.Infrastructure.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Companies", x => x.StockId);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "News",
+                columns: table => new
+                {
+                    NewsId = table.Column<int>(nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Symbol = table.Column<string>(nullable: true),
+                    PublishedDate = table.Column<DateTimeOffset>(nullable: false),
+                    Title = table.Column<string>(nullable: true),
+                    Image = table.Column<string>(nullable: true),
+                    Site = table.Column<string>(nullable: true),
+                    Text = table.Column<string>(nullable: true),
+                    Url = table.Column<string>(nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_News", x => x.NewsId);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Split",
+                columns: table => new
+                {
+                    SplitId = table.Column<int>(nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Date = table.Column<DateTimeOffset>(nullable: false),
+                    StockId = table.Column<int>(nullable: false),
+                    Numerator = table.Column<float>(nullable: false),
+                    Denominator = table.Column<float>(nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Split", x => x.SplitId);
                 });
 
             migrationBuilder.CreateTable(
@@ -86,6 +121,52 @@ namespace InvestoAPI.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Teams",
+                columns: table => new
+                {
+                    TeamId = table.Column<int>(nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Code = table.Column<Guid>(nullable: false),
+                    Name = table.Column<string>(nullable: true),
+                    OwnerId = table.Column<int>(nullable: false),
+                    Created = table.Column<DateTimeOffset>(nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Teams", x => x.TeamId);
+                    table.ForeignKey(
+                        name: "FK_Teams_Users_OwnerId",
+                        column: x => x.OwnerId,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "TeamUser",
+                columns: table => new
+                {
+                    UserId = table.Column<int>(nullable: false),
+                    TeamId = table.Column<int>(nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_TeamUser", x => new { x.UserId, x.TeamId });
+                    table.ForeignKey(
+                        name: "FK_TeamUser_Teams_TeamId",
+                        column: x => x.TeamId,
+                        principalTable: "Teams",
+                        principalColumn: "TeamId",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_TeamUser_Users_UserId",
+                        column: x => x.UserId,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Wallets",
                 columns: table => new
                 {
@@ -94,6 +175,7 @@ namespace InvestoAPI.Infrastructure.Migrations
                     Name = table.Column<string>(nullable: true),
                     Description = table.Column<string>(nullable: true),
                     OwnerId = table.Column<int>(nullable: false),
+                    TeamId = table.Column<int>(nullable: true),
                     InitMoney = table.Column<decimal>(type: "decimal(18,4)", nullable: false),
                     Balance = table.Column<decimal>(type: "decimal(18,4)", nullable: false),
                     Created = table.Column<DateTime>(nullable: false)
@@ -107,6 +189,12 @@ namespace InvestoAPI.Infrastructure.Migrations
                         principalTable: "Users",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Wallets_Teams_TeamId",
+                        column: x => x.TeamId,
+                        principalTable: "Teams",
+                        principalColumn: "TeamId",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -120,9 +208,12 @@ namespace InvestoAPI.Infrastructure.Migrations
                     Amount = table.Column<int>(nullable: false),
                     Buy = table.Column<bool>(nullable: false),
                     Active = table.Column<bool>(nullable: false),
-                    Type = table.Column<int>(nullable: false),
+                    Limit = table.Column<decimal>(type: "decimal(18,4)", nullable: true),
+                    ActivationDate = table.Column<DateTimeOffset>(nullable: true),
+                    ExpiryDate = table.Column<DateTimeOffset>(nullable: true),
+                    StatusEnum = table.Column<int>(nullable: false),
                     Status = table.Column<string>(nullable: true),
-                    Created = table.Column<DateTime>(nullable: false)
+                    Created = table.Column<DateTimeOffset>(nullable: false)
                 },
                 constraints: table =>
                 {
@@ -201,6 +292,22 @@ namespace InvestoAPI.Infrastructure.Migrations
                 column: "WalletId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Teams_Code",
+                table: "Teams",
+                column: "Code",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Teams_OwnerId",
+                table: "Teams",
+                column: "OwnerId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_TeamUser_TeamId",
+                table: "TeamUser",
+                column: "TeamId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Transactions_OrderId",
                 table: "Transactions",
                 column: "OrderId");
@@ -211,6 +318,11 @@ namespace InvestoAPI.Infrastructure.Migrations
                 column: "OwnerId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Wallets_TeamId",
+                table: "Wallets",
+                column: "TeamId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_WalletsState_StockId",
                 table: "WalletsState",
                 column: "StockId");
@@ -219,10 +331,19 @@ namespace InvestoAPI.Infrastructure.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
+                name: "News");
+
+            migrationBuilder.DropTable(
+                name: "Split");
+
+            migrationBuilder.DropTable(
                 name: "Stocks");
 
             migrationBuilder.DropTable(
                 name: "StocksDaily");
+
+            migrationBuilder.DropTable(
+                name: "TeamUser");
 
             migrationBuilder.DropTable(
                 name: "Transactions");
@@ -238,6 +359,9 @@ namespace InvestoAPI.Infrastructure.Migrations
 
             migrationBuilder.DropTable(
                 name: "Wallets");
+
+            migrationBuilder.DropTable(
+                name: "Teams");
 
             migrationBuilder.DropTable(
                 name: "Users");

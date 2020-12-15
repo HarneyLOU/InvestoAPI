@@ -28,10 +28,17 @@ namespace InvestoAPI.Core.Entities
 
         public bool Active { get; set; }
 
-        public OrderType Type { get; set; }
+        [Column(TypeName = "decimal(18,4)")]
+        public decimal? Limit { get; set; }
+
+        public DateTimeOffset? ActivationDate { get; set; }
+
+        public DateTimeOffset? ExpiryDate { get; set; }
+
+        public OrderStatusEnum StatusEnum { get; set; }
 
         public string Status { get; set; }
 
-        public DateTime Created { get; set; }
+        public DateTimeOffset Created { get; set; }
     }
 }

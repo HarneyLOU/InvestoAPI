@@ -41,13 +41,24 @@ namespace InvestoAPI.Infrastructure.Services
             return _context.Wallets.Include(w => w.Possesions).ThenInclude(c => c.Stock).SingleOrDefault(x => x.WalletId == id);
         }
 
+        public Wallet GetTeamWallet(int teamId)
+        {
+            return _context.Wallets.Where(x => x.TeamId == teamId).FirstOrDefault();
+        }
+
         public IEnumerable<Wallet> GetWallets(int userId)
         {
             return _context.Wallets.Where(x => x.OwnerId == userId).Include(w => w.Possesions).ThenInclude(c => c.Stock);
         }
 
+        public IEnumerable<Wallet> GetTeamWallets(int teamId)
+        {
+            return _context.Wallets.Where(x => x.TeamId == teamId).Include(w => w.Possesions).ThenInclude(c => c.Stock);
+        }
+
         public void UpdateWallet(Wallet wallet)
         {
+
             _context.Wallets.Update(wallet);
             _context.SaveChanges();
         }

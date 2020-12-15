@@ -32,10 +32,10 @@ namespace InvestoAPI
             services.AddCors(options =>
             {
                 options.AddPolicy("CorsPolicy", builder => builder
-                        //.WithOrigins("http://localhost:4200")     
-                        .AllowAnyOrigin()
+                        .WithOrigins("http://localhost:4200")     
                         .AllowAnyHeader()
-                        .AllowAnyMethod());
+                        .AllowAnyMethod()
+                        .AllowCredentials());
             });
 
             var key = Encoding.ASCII.GetBytes(Configuration["AppSettings:Secret"]);

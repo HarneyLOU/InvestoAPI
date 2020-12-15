@@ -25,9 +25,15 @@ namespace InvestoAPI.Controllers
         }
 
         [HttpGet("history")]
-        public ActionResult GetHistory(string symbol, string from, string to, string interval = "d")
+        public ActionResult GetHistory(int stockId, string from, string to, string interval)
         {
-            return Ok(_stockService.GetStockHistory(symbol, from, to, interval));
+            return Ok(_stockService.GetStockHistory(stockId, from, to, interval));
+        }
+
+        [HttpGet("last")]
+        public ActionResult GetLast(int stockId, string period)
+        {
+            return Ok(_stockService.GetStockDaily(stockId, period));
         }
 
         [HttpGet("short")]
@@ -47,10 +53,10 @@ namespace InvestoAPI.Controllers
                         Price = _realTimeStockService.GetPrice(stock.StockId),
                         Open = stock.Open,
                         PrevClose = stock.Close,
-                        Low = stock.Low,
-                        High = stock.High,
+                        Low = _realTimeStockService.GetLow(stock.StockId),
+                        High = _realTimeStockService.GetHigh(stock.StockId),
                         Change = decimal.Round(((_realTimeStockService.GetPrice(stock.StockId) - stock.Close) / stock.Close), 4, MidpointRounding.AwayFromZero),
-                        Date = DateTime.SpecifyKind(_realTimeStockService.GetDate(stock.StockId), DateTimeKind.Utc)
+                        Date = _realTimeStockService.GetDate(stock.StockId)
                     }
                 );
             return Ok(stocksShort);

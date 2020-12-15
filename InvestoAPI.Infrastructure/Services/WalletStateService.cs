@@ -1,4 +1,5 @@
 ﻿using InvestoAPI.Core.Entities;
+using InvestoAPI.Core.Enums;
 using InvestoAPI.Core.Interfaces;
 using System;
 using System.Collections.Generic;
@@ -10,14 +11,11 @@ namespace InvestoAPI.Infrastructure.Services
     public class WalletStateService : IWalletStateService
     {
         private readonly ApplicationContext _context;
-        private readonly IWalletService _walletService;
 
         public WalletStateService(
-            ApplicationContext context,
-            IWalletService walletService)
+            ApplicationContext context)
         {
             _context = context;
-            _walletService = walletService;
         }
 
         public Order UpsertWalletState(Transaction transaction)
@@ -25,15 +23,24 @@ namespace InvestoAPI.Infrastructure.Services
             var order = transaction.Order;
             var wallet = order.Wallet;
 
+            if(order.ExpiryDate <= DateTime.Now)
+            {
+                order.Status = "Cancelled - expired";
+                order.StatusEnum = OrderStatusEnum.Cancelled;
+                order.Active = false;
+                return order;
+            }
             if(wallet == null)
             {
                 order.Status = "Cancelled - wallet not exists";
+                order.StatusEnum = OrderStatusEnum.Cancelled;
                 order.Active = false;
                 return order;
             }
             if(order.Buy == true && wallet.Balance - transaction.Price < 0)
             {
                 order.Status = "Cancelled - not funds";
+                order.StatusEnum = OrderStatusEnum.Cancelled;
                 order.Active = false;
                 return order;
             }
@@ -41,6 +48,7 @@ namespace InvestoAPI.Infrastructure.Services
             if (order.Buy == false && walletState == null)
             {
                 order.Status = "Cancelled - not enough stocks";
+                order.StatusEnum = OrderStatusEnum.Cancelled;
                 order.Active = false;
                 return order;
             }
@@ -49,6 +57,7 @@ namespace InvestoAPI.Infrastructure.Services
                 if(order.Buy == false && walletState.Amount < transaction.Amount)
                 {
                     order.Status = "Cancelled - not enough stocks";
+                    order.StatusEnum = OrderStatusEnum.Cancelled;
                     order.Active = false;
                     return order;
                 }
@@ -86,11 +95,13 @@ namespace InvestoAPI.Infrastructure.Services
             if (order.Amount <= 0)
             {
                 order.Status = "Success";
+                order.StatusEnum = OrderStatusEnum.Success;
                 order.Active = false;
             }
             else
             {
                 order.Status = "Partially realized";
+                order.StatusEnum = OrderStatusEnum.Partially;
             }
             wallet.Balance = order.Buy == true ? wallet.Balance - transaction.Price : wallet.Balance + transaction.Price;
             return order;

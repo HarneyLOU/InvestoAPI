@@ -6,10 +6,8 @@ using System.Threading.Tasks;
 
 namespace InvestoAPI.Core.Interfaces
 {
-    public interface INewsService
+    public interface ISplitService
     {
-        IEnumerable<News> GetLast();
-        void Add(News news);
-        Task UpdateWithDataProvider(string[] symbols);
+        Task Split(string[] symbols);
     }
 }

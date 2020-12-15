@@ -24,6 +24,7 @@ namespace InvestoAPI.Web.Profiles
                 .ReverseMap()
                 .ForMember(dest => dest.Symbol, opt => opt.MapFrom(src => src.Stock.Symbol));
             CreateMap<TransactionViewModel, Transaction>().ReverseMap();
+            CreateMap<TeamViewModel, Team>().ReverseMap();
         }
     }
 }

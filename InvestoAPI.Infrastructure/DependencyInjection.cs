@@ -27,6 +27,9 @@ namespace InvestoAPI.Infrastructure
             services.AddScoped<IWalletStateService, WalletStateService>();
             services.AddScoped<IOrderService, OrderService>();
             services.AddScoped<ITransactionService, TransactionService>();
+            services.AddScoped<INewsService, NewsService>();
+            services.AddScoped<ISplitService, SplitService>();
+            services.AddScoped<ITeamService, TeamService>();
             return services;
         }
     }

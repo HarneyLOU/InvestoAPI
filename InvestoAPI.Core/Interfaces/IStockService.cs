@@ -11,6 +11,9 @@ namespace InvestoAPI.Core.Interfaces
         DateTime GetMaxDate(string symbol);
         Stock GetStock(string symbol, DateTime? date);
         IEnumerable<StockDaily> GetStockDailyCurrentAll();
-        IEnumerable<Stock> GetStockHistory(string symbol, string from, string to, string interval = "d");
+        IEnumerable<Stock> GetStockHistory(int stockId, string from, string to, string interval);
+        IEnumerable<StockDaily> GetStockDaily(int stockId, string period);
+        Task UpdatePrices(int stockId, string symbol);
+        Task Split(int stockId, float value);
     }
 }
